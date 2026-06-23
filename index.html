@@ -362,27 +362,27 @@
                 <h3>Planejamento de Metas Anuais</h3>
                 <div class="goals-grid">
                     <div class="goal-card">
-                        <label for="metaAnoConsorcio">Meta Ano Consórcio (R$):</label>
+                        <label for="metaAnoConsorcio">Meta Ano Consórcio (R$): <span id="pctAnoConsorcio" style="color: #3b82f6;">0.0%</span></label>
                         <input type="text" id="metaAnoConsorcio" class="mask-moeda" value="600.000,00">
                     </div>
                     <div class="goal-card">
-                        <label for="metaAnoSeguro">Meta Ano Seguro (R$):</label>
+                        <label for="metaAnoSeguro">Meta Ano Seguro (R$): <span id="pctAnoSeguro" style="color: #eab308;">0.0%</span></label>
                         <input type="text" id="metaAnoSeguro" class="mask-moeda" value="240.000,00">
                     </div>
                     <div class="goal-card">
-                        <label for="metaAnoInvest">Meta Ano Investimentos (R$):</label>
+                        <label for="metaAnoInvest">Meta Ano Investimentos (R$): <span id="pctAnoInvest" style="color: #10b981;">0.0%</span></label>
                         <input type="text" id="metaAnoInvest" class="mask-moeda" value="360.000,00">
                     </div>
                     <div class="goal-card">
-                        <label for="metaAnoCredito">Meta Ano Crédito Total (R$):</label>
+                        <label for="metaAnoCredito">Meta Ano Crédito Total (R$): <span id="pctAnoCredito" style="color: #a855f7;">0.0%</span></label>
                         <input type="text" id="metaAnoCredito" class="mask-moeda" value="1.200.000,00">
                     </div>
                     <div class="goal-card">
-                        <label for="metaAnoContas">Meta Ano Contas Abertas (Qtd):</label>
+                        <label for="metaAnoContas">Meta Ano Contas Abertas (Qtd): <span id="pctAnoContas" style="color: #f97316;">0.0%</span></label>
                         <input type="text" id="metaAnoContas" class="mask-qtd" value="1.200">
                     </div>
                     <div class="goal-card">
-                        <label for="metaAnoVisitas">Meta Ano Visitas Totais (Qtd):</label>
+                        <label for="metaAnoVisitas">Meta Ano Visitas Totais (Qtd): <span id="pctAnoVisitas" style="color: #ec4899;">0.0%</span></label>
                         <input type="text" id="metaAnoVisitas" class="mask-qtd" value="2.400">
                     </div>
                 </div>
@@ -522,8 +522,7 @@
                                 <th>Ações</th>
                             </tr>
                         </thead>
-                        <tbody id="lancamentosTableBody">
-                            </tbody>
+                        <tbody id="lancamentosTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -611,7 +610,6 @@
 
             // --- SISTEMA DE MÁSCARAS EM TEMPO REAL ---
             function configurarMascaras() {
-                // Máscara Dinâmica de Dinheiro
                 document.querySelectorAll('.mask-moeda').forEach(input => {
                     input.addEventListener('input', (e) => {
                         let valor = e.target.value.replace(/\D/g, "");
@@ -621,7 +619,6 @@
                     });
                 });
 
-                // Máscara Dinâmica de Quantidades Inteiras
                 document.querySelectorAll('.mask-qtd').forEach(input => {
                     input.addEventListener('input', (e) => {
                         let valor = e.target.value.replace(/\D/g, "");
@@ -648,7 +645,39 @@
 
             configurarMascaras();
 
-            // 1. Atualizar e Renderizar os Cards da Tela Inicial com as Mídias de Metas
+            // Lógica para calcular e atualizar as porcentagens acumuladas do ano todo
+            function calcularPorcentagensAnuais() {
+                let anoConsorcio = 0, anoSeguro = 0, anoInvest = 0, anoCredito = 0, anoContas = 0, anoVisitas = 0;
+
+                meses.forEach(mes => {
+                    for (let d = 1; d <= 30; d++) {
+                        dbFinanceiro[mes][d].forEach(item => {
+                            anoConsorcio += item.consorcio || 0;
+                            anoSeguro += item.seguro || 0;
+                            anoInvest += item.investimentos || 0;
+                            anoCredito += item.credito || 0;
+                            anoContas += item.contas || 0;
+                            anoVisitas += item.visitas || 0;
+                        });
+                    }
+                });
+
+                const mC = converterParaFloat(metaAnoConsorcio.value) || 1;
+                const mS = converterParaFloat(metaAnoSeguro.value) || 1;
+                const mI = converterParaFloat(metaAnoInvest.value) || 1;
+                const mCr = converterParaFloat(metaAnoCredito.value) || 1;
+                const mCt = converterParaFloat(metaAnoContas.value) || 1;
+                const mV = converterParaFloat(metaAnoVisitas.value) || 1;
+
+                document.getElementById('pctAnoConsorcio').textContent = ((anoConsorcio / mC) * 100).toFixed(1) + '%';
+                document.getElementById('pctAnoSeguro').textContent = ((anoSeguro / mS) * 100).toFixed(1) + '%';
+                document.getElementById('pctAnoInvest').textContent = ((anoInvest / mI) * 100).toFixed(1) + '%';
+                document.getElementById('pctAnoCredito').textContent = ((anoCredito / mCr) * 100).toFixed(1) + '%';
+                document.getElementById('pctAnoContas').textContent = ((anoContas / mCt) * 100).toFixed(1) + '%';
+                document.getElementById('pctAnoVisitas').textContent = ((anoVisitas / mV) * 100).toFixed(1) + '%';
+            }
+
+            // 1. Atualizar e Renderizar os Cards da Tela Inicial
             function atualizarCardsDosMeses() {
                 monthsGrid.innerHTML = '';
                 meses.forEach(mes => {
@@ -657,7 +686,6 @@
                     
                     let tConsorcio = 0, tSeguro = 0, tInvest = 0, tCredito = 0, tContas = 0, tVisitas = 0;
 
-                    // Somando produção do mês
                     for (let d = 1; d <= 30; d++) {
                         dbFinanceiro[mes][d].forEach(item => {
                             tConsorcio += item.consorcio || 0;
@@ -669,7 +697,6 @@
                         });
                     }
 
-                    // Baselines mensais (Meta Ano / 12)
                     const mC = converterParaFloat(metaAnoConsorcio.value) / 12 || 1;
                     const mS = converterParaFloat(metaAnoSeguro.value) / 12 || 1;
                     const mI = converterParaFloat(metaAnoInvest.value) / 12 || 1;
@@ -677,7 +704,6 @@
                     const mCt = converterParaFloat(metaAnoContas.value) / 12 || 1;
                     const mV = converterParaFloat(metaAnoVisitas.value) / 12 || 1;
 
-                    // Porcentagem individual por canal
                     const pC = Math.min((tConsorcio / mC) * 100, 100);
                     const pS = Math.min((tSeguro / mS) * 100, 100);
                     const pI = Math.min((tInvest / mI) * 100, 100);
@@ -685,7 +711,6 @@
                     const pCt = Math.min((tContas / mCt) * 100, 100);
                     const pV = Math.min((tVisitas / mV) * 100, 100);
 
-                    // Média aritmética geral do mês
                     const mediaGeral = ((pC + pS + pI + pCr + pCt + pV) / 6).toFixed(1);
 
                     card.innerHTML = `
@@ -696,14 +721,14 @@
                     card.addEventListener('click', () => abrirMes(mes));
                     monthsGrid.appendChild(card);
                 });
+
+                calcularPorcentagensAnuais();
             }
 
-            // Ouvintes para recalcular os cards da home se as metas do ano mudarem
             [metaAnoConsorcio, metaAnoSeguro, metaAnoInvest, metaAnoCredito, metaAnoContas, metaAnoVisitas].forEach(input => {
                 input.addEventListener('input', atualizarCardsDosMeses);
             });
 
-            // Inicialização Inicial da Home
             atualizarCardsDosMeses();
 
             // 2. Navegação: Abrir Mês
@@ -713,7 +738,6 @@
                 dayView.style.display = 'block';
                 dayViewTitle.textContent = `Competência: ${mes}`;
                 
-                // Divisões proporcionais exatas por 12
                 metaConsorcioInput.value = formatarNumeroParaBRL(converterParaFloat(metaAnoConsorcio.value) / 12);
                 metaSeguroInput.value = formatarNumeroParaBRL(converterParaFloat(metaAnoSeguro.value) / 12);
                 metaInvestInput.value = formatarNumeroParaBRL(converterParaFloat(metaAnoInvest.value) / 12);
@@ -800,113 +824,92 @@
                 editingIndex = index;
                 formSectionTitle.textContent = "Editar Lançamento";
                 submitBtn.textContent = "Salvar Alterações";
-                submitBtn.style.backgroundColor = "#3b82f6";
-                document.getElementById('cliente').focus();
             };
 
             window.deletarRegistro = function(index) {
-                if(confirm("Tem certeza que deseja remover este lançamento?")) {
+                if(confirm("Tem certeza que deseja excluir este lançamento?")) {
                     dbFinanceiro[selectedMonth][selectedDay].splice(index, 1);
                     atualizarTabelaDoDia();
-                    calcularMetasDoMes();
+                    renderizarDias();
+                    atualizarCardsDosMeses();
                 }
             };
 
             function cancelarEdicao() {
                 editingIndex = null;
                 financeForm.reset();
-                document.getElementById('consorcio').value = "0,00";
-                document.getElementById('seguro').value = "0,00";
-                document.getElementById('investimentos').value = "0,00";
-                document.getElementById('credito').value = "0,00";
-                document.getElementById('contas').value = "0";
-                document.getElementById('visitas').value = "0";
                 formSectionTitle.textContent = "Novo Lançamento";
                 submitBtn.textContent = "Adicionar Lançamento";
-                submitBtn.style.backgroundColor = "#10b981";
             }
 
-            // 5. Motor de Processamento das Metas Proporcionais
-            function calcularMetasDoMes() {
-                let totalConsorcio = 0, totalSeguro = 0, totalInvest = 0, totalCredito = 0, totalContas = 0, totalVisitas = 0;
-
-                for (let d = 1; d <= 30; d++) {
-                    dbFinanceiro[selectedMonth][d].forEach(item => {
-                        totalConsorcio += item.consorcio || 0;
-                        totalSeguro += item.seguro || 0;
-                        totalInvest += item.investimentos || 0;
-                        totalCredito += item.credito || 0;
-                        totalContas += item.contas || 0;
-                        totalVisitas += item.visitas || 0;
-                    });
-                }
-
-                realizadoConsorcio.textContent = `R$ ${formatarNumeroParaBRL(totalConsorcio)}`;
-                realizadoSeguro.textContent = `R$ ${formatarNumeroParaBRL(totalSeguro)}`;
-                realizadoInvest.textContent = `R$ ${formatarNumeroParaBRL(totalInvest)}`;
-                realizadoCredito.textContent = `R$ ${formatarNumeroParaBRL(totalCredito)}`;
-                realizadoContas.textContent = formatarQtd(totalContas);
-                realizadoVisitas.textContent = formatarQtd(totalVisitas);
-
-                const mConsorcio = converterParaFloat(metaConsorcioInput.value) || 1;
-                const mSeguro = converterParaFloat(metaSeguroInput.value) || 1;
-                const mInvest = converterParaFloat(metaInvestInput.value) || 1;
-                const mCredito = converterParaFloat(metaCreditoInput.value) || 1;
-                const mContas = converterParaFloat(metaContasInput.value) || 1;
-                const mVisitas = converterParaFloat(metaVisitasInput.value) || 1;
-
-                const pConsorcio = Math.min((totalConsorcio / mConsorcio) * 100, 100).toFixed(1);
-                const pSeguro = Math.min((totalSeguro / mSeguro) * 100, 100).toFixed(1);
-                const pInvest = Math.min((totalInvest / mInvest) * 100, 100).toFixed(1);
-                const pCredito = Math.min((totalCredito / mCredito) * 100, 100).toFixed(1);
-                const pContas = Math.min((totalContas / mContas) * 100, 100).toFixed(1);
-                const pVisitas = Math.min((totalVisitas / mVisitas) * 100, 100).toFixed(1);
-
-                barConsorcio.style.width = `${pConsorcio}%`;
-                txtConsorcio.textContent = `${pConsorcio}%`;
-
-                barSeguro.style.width = `${pSeguro}%`;
-                txtSeguro.textContent = `${pSeguro}%`;
-
-                barInvest.style.width = `${pInvest}%`;
-                txtInvest.textContent = `${pInvest}%`;
-
-                barCredito.style.width = `${pCredito}%`;
-                txtCredito.textContent = `${pCredito}%`;
-
-                barContas.style.width = `${pContas}%`;
-                txtContas.textContent = `${pContas}%`;
-
-                barVisitas.style.width = `${pVisitas}%`;
-                txtVisitas.textContent = `${pVisitas}%`;
-            }
-
-            // 6. Manipulação de Envio do Formulário
             financeForm.addEventListener('submit', (e) => {
                 e.preventDefault();
-
-                const dadosLancamento = {
+                
+                const novoRegistro = {
                     cliente: document.getElementById('cliente').value,
                     consorcio: converterParaFloat(document.getElementById('consorcio').value),
                     seguro: converterParaFloat(document.getElementById('seguro').value),
                     investimentos: converterParaFloat(document.getElementById('investimentos').value),
                     credito: converterParaFloat(document.getElementById('credito').value),
-                    contas: converterParaFloat(document.getElementById('contas').value),
-                    visitas: converterParaFloat(document.getElementById('visitas').value)
+                    contas: parseInt(document.getElementById('contas').value.replace(/\D/g, "")) || 0,
+                    visitas: parseInt(document.getElementById('visitas').value.replace(/\D/g, "")) || 0
                 };
 
                 if (editingIndex !== null) {
-                    dbFinanceiro[selectedMonth][selectedDay][editingIndex] = dadosLancamento;
-                    alert("Lançamento atualizado com sucesso!");
+                    dbFinanceiro[selectedMonth][selectedDay][editingIndex] = novoRegistro;
                 } else {
-                    dbFinanceiro[selectedMonth][selectedDay].push(dadosLancamento);
+                    dbFinanceiro[selectedMonth][selectedDay].push(novoRegistro);
                 }
 
                 cancelarEdicao();
                 atualizarTabelaDoDia();
+                renderizarDias();
+                atualizarCardsDosMeses();
             });
 
-            // Botões de Voltar
+            function calcularMetasDoMes() {
+                let tConsorcio = 0, tSeguro = 0, tInvest = 0, tCredito = 0, tContas = 0, tVisitas = 0;
+
+                for (let d = 1; d <= 30; d++) {
+                    dbFinanceiro[selectedMonth][d].forEach(item => {
+                        tConsorcio += item.consorcio || 0;
+                        tSeguro += item.seguro || 0;
+                        tInvest += item.investimentos || 0;
+                        tCredito += item.credito || 0;
+                        tContas += item.contas || 0;
+                        tVisitas += item.visitas || 0;
+                    });
+                }
+
+                realizadoConsorcio.textContent = "R$ " + formatarNumeroParaBRL(tConsorcio);
+                realizadoSeguro.textContent = "R$ " + formatarNumeroParaBRL(tSeguro);
+                realizadoInvest.textContent = "R$ " + formatarNumeroParaBRL(tInvest);
+                realizadoCredito.textContent = "R$ " + formatarNumeroParaBRL(tCredito);
+                realizadoContas.textContent = formatarQtd(tContas);
+                realizadoVisitas.textContent = formatarQtd(tVisitas);
+
+                const mC = converterParaFloat(metaConsorcioInput.value) || 1;
+                const mS = converterParaFloat(metaSeguroInput.value) || 1;
+                const mI = converterParaFloat(metaInvestInput.value) || 1;
+                const mCr = converterParaFloat(metaCreditoInput.value) || 1;
+                const mCt = converterParaFloat(metaContasInput.value) || 1;
+                const mV = converterParaFloat(metaVisitasInput.value) || 1;
+
+                const pC = Math.min((tConsorcio / mC) * 100, 100).toFixed(0);
+                const pS = Math.min((tSeguro / mS) * 100, 100).toFixed(0);
+                const pI = Math.min((tInvest / mI) * 100, 100).toFixed(0);
+                const pCr = Math.min((tCredito / mCr) * 100, 100).toFixed(0);
+                const pCt = Math.min((tContas / mCt) * 100, 100).toFixed(0);
+                const pV = Math.min((tVisitas / mV) * 100, 100).toFixed(0);
+
+                barConsorcio.style.width = pC + '%'; txtConsorcio.textContent = pC + '%';
+                barSeguro.style.width = pS + '%'; txtSeguro.textContent = pS + '%';
+                barInvest.style.width = pI + '%'; txtInvest.textContent = pI + '%';
+                barCredito.style.width = pCr + '%'; txtCredito.textContent = pCr + '%';
+                barContas.style.width = pCt + '%'; txtContas.textContent = pCt + '%';
+                barVisitas.style.width = pV + '%'; txtVisitas.textContent = pV + '%';
+            }
+
             backToMonthsBtn.addEventListener('click', () => {
                 dayView.style.display = 'none';
                 monthView.style.display = 'block';
@@ -916,8 +919,7 @@
             backToDaysBtn.addEventListener('click', () => {
                 formView.style.display = 'none';
                 dayView.style.display = 'block';
-                renderizarDias();
-                calcularMetasDoMes();
+                abrirMes(selectedMonth);
             });
         });
     </script>
